@@ -28,242 +28,104 @@ function canExportAsSvg(node: SceneNode): boolean {
          node.type === 'GROUP';
 }
 
-// Function to convert SVG path data to Canvas drawing commands
-function convertSvgToCanvas(svgData: string): string {
-  // Parse SVG string using regex instead of DOMParser
-  const widthMatch = svgData.match(/width="([^"]+)"/);
-  const heightMatch = svgData.match(/height="([^"]+)"/);
-  const viewBoxMatch = svgData.match(/viewBox="([^"]+)"/);
-  
-  const width = widthMatch ? widthMatch[1] : '400';
-  const height = heightMatch ? heightMatch[1] : '300';
-  const viewBox = viewBoxMatch ? viewBoxMatch[1] : null;
-  
-  // Start building Canvas.js code
-  let canvasCode = '// Canvas.js code generated from SVG\n' +
-    'const canvas = document.getElementById(\'myCanvas\');\n' +
-    'const ctx = canvas.getContext(\'2d\');\n\n' +
-    '// Set canvas size based on SVG dimensions\n' +
-    'canvas.width = ' + width + ';\n' +
-    'canvas.height = ' + height + ';\n\n' +
-    '// Clear canvas\n' +
-    'ctx.clearRect(0, 0, canvas.width, canvas.height);\n\n' +
-    '// Set default styles\n' +
-    'ctx.fillStyle = \'#000000\';\n' +
-    'ctx.strokeStyle = \'#000000\';\n' +
-    'ctx.lineWidth = 1;\n\n' +
-    '// Drawing functions\n' +
-    'function drawPath(pathData) {\n' +
-    '  const commands = pathData.split(/(?=[MLHVCSQTAZmlhvcsqtaz])/);\n' +
-    '  ctx.beginPath();\n\n' +
-    '  let currentX = 0;\n' +
-    '  let currentY = 0;\n\n' +
-    '  for (const cmd of commands) {\n' +
-    '    const type = cmd[0];\n' +
-    '    const params = cmd.slice(1).trim().split(/[,\\s]+/).map(Number);\n\n' +
-    '    switch (type) {\n' +
-    '      case \'M\': // Move to absolute\n' +
-    '        currentX = params[0];\n' +
-    '        currentY = params[1];\n' +
-    '        ctx.moveTo(currentX, currentY);\n' +
-    '        break;\n' +
-    '      case \'m\': // Move to relative\n' +
-    '        currentX += params[0];\n' +
-    '        currentY += params[1];\n' +
-    '        ctx.moveTo(currentX, currentY);\n' +
-    '        break;\n' +
-    '      case \'L\': // Line to absolute\n' +
-    '        currentX = params[0];\n' +
-    '        currentY = params[1];\n' +
-    '        ctx.lineTo(currentX, currentY);\n' +
-    '        break;\n' +
-    '      case \'l\': // Line to relative\n' +
-    '        currentX += params[0];\n' +
-    '        currentY += params[1];\n' +
-    '        ctx.lineTo(currentX, currentY);\n' +
-    '        break;\n' +
-    '      case \'H\': // Horizontal line to absolute\n' +
-    '        currentX = params[0];\n' +
-    '        ctx.lineTo(currentX, currentY);\n' +
-    '        break;\n' +
-    '      case \'h\': // Horizontal line to relative\n' +
-    '        currentX += params[0];\n' +
-    '        ctx.lineTo(currentX, currentY);\n' +
-    '        break;\n' +
-    '      case \'V\': // Vertical line to absolute\n' +
-    '        currentY = params[0];\n' +
-    '        ctx.lineTo(currentX, currentY);\n' +
-    '        break;\n' +
-    '      case \'v\': // Vertical line to relative\n' +
-    '        currentY += params[0];\n' +
-    '        ctx.lineTo(currentX, currentY);\n' +
-    '        break;\n' +
-    '      case \'C\': // Cubic Bezier curve absolute\n' +
-    '        ctx.bezierCurveTo(params[0], params[1], params[2], params[3], params[4], params[5]);\n' +
-    '        currentX = params[4];\n' +
-    '        currentY = params[5];\n' +
-    '        break;\n' +
-    '      case \'c\': // Cubic Bezier curve relative\n' +
-    '        ctx.bezierCurveTo(\n' +
-    '          currentX + params[0], currentY + params[1],\n' +
-    '          currentX + params[2], currentY + params[3],\n' +
-    '          currentX + params[4], currentY + params[5]\n' +
-    '        );\n' +
-    '        currentX += params[4];\n' +
-    '        currentY += params[5];\n' +
-    '        break;\n' +
-    '      case \'Z\': // Close path\n' +
-    '      case \'z\':\n' +
-    '        ctx.closePath();\n' +
-    '        break;\n' +
-    '    }\n' +
-    '  }\n' +
-    '}\n\n';
-
-  // Process SVG elements using regex
-  function processSvgElement(svgString: string) {
-    // Extract fill and stroke styles
-    const fillMatch = svgString.match(/fill="([^"]+)"/);
-    const strokeMatch = svgString.match(/stroke="([^"]+)"/);
-    const strokeWidthMatch = svgString.match(/stroke-width="([^"]+)"/);
-    
-    if (fillMatch && fillMatch[1] !== 'none') {
-      canvasCode += 'ctx.fillStyle = \'' + fillMatch[1] + '\';\n';
-    }
-    if (strokeMatch && strokeMatch[1] !== 'none') {
-      canvasCode += 'ctx.strokeStyle = \'' + strokeMatch[1] + '\';\n';
-    }
-    if (strokeWidthMatch) {
-      canvasCode += 'ctx.lineWidth = ' + strokeWidthMatch[1] + ';\n';
-    }
-    
-    // Process paths
-    const pathRegex = /<path[^>]*d="([^"]+)"[^>]*>/g;
-    let pathMatch;
-    while ((pathMatch = pathRegex.exec(svgString)) !== null) {
-      canvasCode += 'drawPath(\'' + pathMatch[1] + '\');\n';
-      if (fillMatch && fillMatch[1] !== 'none') {
-        canvasCode += 'ctx.fill();\n';
-      }
-      if (strokeMatch && strokeMatch[1] !== 'none') {
-        canvasCode += 'ctx.stroke();\n';
-      }
-    }
-    
-    // Process rectangles
-    const rectRegex = /<rect[^>]*x="([^"]*)"[^>]*y="([^"]*)"[^>]*width="([^"]*)"[^>]*height="([^"]*)"[^>]*>/g;
-    let rectMatch;
-    while ((rectMatch = rectRegex.exec(svgString)) !== null) {
-      const x = rectMatch[1] || '0';
-      const y = rectMatch[2] || '0';
-      const width = rectMatch[3] || '0';
-      const height = rectMatch[4] || '0';
-      
-      canvasCode += 'ctx.beginPath();\n';
-      canvasCode += 'ctx.rect(' + x + ', ' + y + ', ' + width + ', ' + height + ');\n';
-      if (fillMatch && fillMatch[1] !== 'none') {
-        canvasCode += 'ctx.fill();\n';
-      }
-      if (strokeMatch && strokeMatch[1] !== 'none') {
-        canvasCode += 'ctx.stroke();\n';
-      }
-    }
-    
-    // Process circles
-    const circleRegex = /<circle[^>]*cx="([^"]*)"[^>]*cy="([^"]*)"[^>]*r="([^"]*)"[^>]*>/g;
-    let circleMatch;
-    while ((circleMatch = circleRegex.exec(svgString)) !== null) {
-      const cx = circleMatch[1] || '0';
-      const cy = circleMatch[2] || '0';
-      const r = circleMatch[3] || '0';
-      
-      canvasCode += 'ctx.beginPath();\n';
-      canvasCode += 'ctx.arc(' + cx + ', ' + cy + ', ' + r + ', 0, Math.PI * 2);\n';
-      if (fillMatch && fillMatch[1] !== 'none') {
-        canvasCode += 'ctx.fill();\n';
-      }
-      if (strokeMatch && strokeMatch[1] !== 'none') {
-        canvasCode += 'ctx.stroke();\n';
-      }
-    }
-    
-    // Process ellipses
-    const ellipseRegex = /<ellipse[^>]*cx="([^"]*)"[^>]*cy="([^"]*)"[^>]*rx="([^"]*)"[^>]*ry="([^"]*)"[^>]*>/g;
-    let ellipseMatch;
-    while ((ellipseMatch = ellipseRegex.exec(svgString)) !== null) {
-      const cx = ellipseMatch[1] || '0';
-      const cy = ellipseMatch[2] || '0';
-      const rx = ellipseMatch[3] || '0';
-      const ry = ellipseMatch[4] || '0';
-      
-      canvasCode += 'ctx.beginPath();\n';
-      canvasCode += 'ctx.ellipse(' + cx + ', ' + cy + ', ' + rx + ', ' + ry + ', 0, 0, Math.PI * 2);\n';
-      if (fillMatch && fillMatch[1] !== 'none') {
-        canvasCode += 'ctx.fill();\n';
-      }
-      if (strokeMatch && strokeMatch[1] !== 'none') {
-        canvasCode += 'ctx.stroke();\n';
-      }
-    }
-    
-    // Process lines
-    const lineRegex = /<line[^>]*x1="([^"]*)"[^>]*y1="([^"]*)"[^>]*x2="([^"]*)"[^>]*y2="([^"]*)"[^>]*>/g;
-    let lineMatch;
-    while ((lineMatch = lineRegex.exec(svgString)) !== null) {
-      const x1 = lineMatch[1] || '0';
-      const y1 = lineMatch[2] || '0';
-      const x2 = lineMatch[3] || '0';
-      const y2 = lineMatch[4] || '0';
-      
-      canvasCode += 'ctx.beginPath();\n';
-      canvasCode += 'ctx.moveTo(' + x1 + ', ' + y1 + ');\n';
-      canvasCode += 'ctx.lineTo(' + x2 + ', ' + y2 + ');\n';
-      if (strokeMatch && strokeMatch[1] !== 'none') {
-        canvasCode += 'ctx.stroke();\n';
-      }
-    }
-  }
-  
-  // Process the SVG
-  processSvgElement(svgData);
-  
-  canvasCode += '\nconsole.log(\'SVG successfully converted to Canvas.js code\');\n';
-  
-  return canvasCode;
-}
+// Debouncing variables for real-time updates
+let updateTimeout: ReturnType<typeof setTimeout> | null = null;
 
 // Start by checking if there's a selection when the plugin launches
 if (figma.currentPage.selection.length > 0) {
   handleSelection(figma.currentPage.selection);
 }
 
+// Helper to check if SVG preview tab is active (communicate with UI)
+let svgPreviewTabActive = true;
+
 // Listen for selection changes to update the SVG preview
 figma.on('selectionchange', () => {
   handleSelection(figma.currentPage.selection);
 });
 
-// Add listener for node changes
+// Add listener for node changes with improved responsiveness
 figma.on('documentchange', (event) => {
   const selection = figma.currentPage.selection;
   let shouldUpdate = false;
 
+  // Only update if SVG preview tab is active and we have something selected
+  if (!svgPreviewTabActive || selection.length === 0) {
+    return;
+  }
+
+  // Check if any changes affect the current selection or their visual properties
   for (const change of event.documentChanges) {
+    // Log changes for debugging
+    console.log('Document change detected:', change.type, change);
+    
+    // Check for property changes that affect visual appearance
     if (change.type === 'PROPERTY_CHANGE' && 'nodeId' in change) {
-      // If the changed node is in the current selection, update
-      if (selection.some(node => node.id === change.nodeId)) {
+      // Get all node IDs that should trigger updates (selection + all descendants + parents)
+      const relevantNodeIds = new Set<string>();
+      
+      // Add selected nodes and their parents
+      selection.forEach(node => {
+        relevantNodeIds.add(node.id);
+        
+        // Add parent nodes (for frame background changes)
+        let parent = node.parent;
+        while (parent && parent.type !== 'PAGE') {
+          relevantNodeIds.add(parent.id);
+          parent = parent.parent;
+        }
+        
+        // Add all descendant nodes
+        const addDescendants = (node: SceneNode) => {
+          if ('children' in node && node.children) {
+            node.children.forEach(child => {
+              relevantNodeIds.add(child.id);
+              addDescendants(child);
+            });
+          }
+        };
+        addDescendants(node);
+      });
+
+      // Check if the changed node is relevant
+      if (relevantNodeIds.has(change.nodeId as string)) {
+        console.log('Relevant change detected for node:', change.nodeId);
         shouldUpdate = true;
         break;
       }
     }
+    
+    // Also catch other types of changes that might affect appearance
+    if (change.type === 'CREATE' || change.type === 'DELETE') {
+      console.log('Structure change detected');
+      shouldUpdate = true;
+      break;
+    }
+  }
+
+  // Force update for any document change when something is selected (more aggressive)
+  if (event.documentChanges.length > 0 && selection.length > 0) {
+    shouldUpdate = true;
   }
 
   if (shouldUpdate) {
-    handleSelection(selection);
+    console.log('Triggering preview update');
+    // Clear any pending updates
+    if (updateTimeout) {
+      clearTimeout(updateTimeout);
+    }
+    
+    // Update immediately for better responsiveness
+    updateTimeout = setTimeout(() => {
+      handleSelection(selection);
+    }, 10); // Even shorter delay for maximum responsiveness
   }
 });
 
 // Handle the selected nodes and extract SVG data
 async function handleSelection(selection: readonly SceneNode[]): Promise<void> {
+  console.log('handleSelection called with:', selection.length, 'nodes');
+  
   // Check if there's a valid selection that can be exported as SVG
   const validNodes = selection.filter(node => canExportAsSvg(node));
   
@@ -278,15 +140,25 @@ async function handleSelection(selection: readonly SceneNode[]): Promise<void> {
   try {
     // Export selected node as SVG
     const svgNode = validNodes[0]; // For now, just use the first valid node
+    console.log('Exporting node:', svgNode.name, 'type:', svgNode.type);
+    
+    // No delay for maximum responsiveness
     const exportSettings: ExportSettings = {
       format: 'SVG',
       svgOutlineText: true,
       svgIdAttribute: true,
-      svgSimplifyStroke: true
+      svgSimplifyStroke: true,
+      // For frames and groups, ensure backgrounds are included
+      ...(svgNode.type === 'FRAME' && {
+        useAbsoluteBounds: false
+      })
     };
     
+    console.log('Starting export with settings:', exportSettings);
     const svgData = await svgNode.exportAsync(exportSettings);
     const svgString = String.fromCharCode.apply(null, svgData as unknown as number[]);
+    
+    console.log('Export completed, SVG length:', svgString.length);
     
     // Send SVG data to UI for display
     figma.ui.postMessage({
@@ -305,51 +177,20 @@ async function handleSelection(selection: readonly SceneNode[]): Promise<void> {
 }
 
 // Handle messages from the UI
-figma.ui.onmessage = (msg: { type: string }) => {
-  if (msg.type === 'convert-to-canvas') {
-    // Get the current selection
-    const validNodes = figma.currentPage.selection.filter(node => canExportAsSvg(node));
-    
-    if (validNodes.length === 0) {
-      figma.ui.postMessage({
-        type: 'canvas-code',
-        code: '// No valid vector elements selected\n// Please select a vector, shape, or group'
-      });
-      return;
+figma.ui.onmessage = (msg: { type: string; tab?: string }) => {
+  if (msg.type === 'tab-changed' && 'tab' in msg) {
+    svgPreviewTabActive = msg.tab === 'svg';
+    // If switching to SVG tab, immediately update preview
+    if (svgPreviewTabActive && figma.currentPage.selection.length > 0) {
+      handleSelection(figma.currentPage.selection);
     }
-    
-    // Export the selected node as SVG and convert to Canvas code
-    (async () => {
-      try {
-        const svgNode = validNodes[0]; // For now, just use the first valid node
-        const exportSettings: ExportSettings = {
-          format: 'SVG',
-          svgOutlineText: true,
-          svgIdAttribute: true,
-          svgSimplifyStroke: true
-        };
-        
-        const svgData = await svgNode.exportAsync(exportSettings);
-        const svgString = String.fromCharCode.apply(null, svgData as unknown as number[]);
-        
-        // Convert SVG to Canvas code
-        const canvasCode = convertSvgToCanvas(svgString);
-        
-        // Send the Canvas code to the UI
-        figma.ui.postMessage({
-          type: 'canvas-code',
-          code: canvasCode,
-          name: svgNode.name
-        });
-        
-      } catch (error) {
-        console.error('Error converting SVG to Canvas:', error);
-        figma.ui.postMessage({
-          type: 'canvas-code',
-          code: `// Error converting SVG to Canvas\n// ${error}`
-        });
-      }
-    })();
+  }
+  if (msg.type === 'convert-to-canvas') {
+    figma.ui.postMessage({
+      type: 'canvas-code',
+      code: '// This feature is under development.'
+    });
+    return;
   } else if (msg.type === 'cancel') {
     figma.closePlugin();
   }

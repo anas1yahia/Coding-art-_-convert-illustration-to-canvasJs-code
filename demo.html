@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    
+    </canvas>
+
+    <script>
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 634;
+      canvas.height = 602;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const canvasSize = { width: 500, height: 500 };
+const colors = {
+  background: '#FCF9E2',
+  accent: '#FEECC6',
+};
+
+// 🎨 Background
+const background = {
+  type: 'rect',
+  name: 'Canvas Background',
+  position: { x: 0, y: 0 },
+  size: canvasSize,
+  style: { fill: colors.background },
+};
+
+// 🌞 Sun in top-right
+const sun = {
+  type: 'circle',
+  name: 'Sun',
+  center: { x: 460, y: 60 },
+  radius: 30,
+  style: { fill: colors.accent },
+};
+
+// 🏔️ Hill shape (abstracted with polygon)
+const hill = {
+  type: 'polygon',
+  name: 'Hill',
+  points: [
+    { x: 100, y: 400 },
+    { x: 250, y: 250 },
+    { x: 400, y: 400 },
+  ],
+  style: { fill: '#E0D4AA' },
+};
+
+// 📘 Book object (rectangle)
+const book = {
+  type: 'rect',
+  name: 'Book Cover',
+  position: { x: 180, y: 320 },
+  size: { width: 140, height: 40 },
+  style: { fill: '#C6A87D' },
+};
+
+// 🖼️ Final Scene
+const scene = {
+  canvasSize,
+  elements: [
+    background,
+    sun,
+    hill,
+    book,
+    // Add more human-readable art elements
+  ],
+};
+
+export default scene;
+
+
+    </script>
+</body>
+</html>
