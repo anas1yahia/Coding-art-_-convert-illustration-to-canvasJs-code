@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Coding art : convert svg to canvasJs code</title>
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js"></script>
+  <link rel="stylesheet" href="prism-dark.css">
   <style>
     :root {
       --bg-color: #1e1f28;
@@ -100,49 +102,96 @@
     
     .code-container {
       flex: 1;
-      background-color: var(--preview-bg);
-      border-radius: 8px;
+      background: rgba(45, 46, 55, 0.92);
+      border-radius: 12px;
+      box-shadow: 0 4px 24px 0 rgba(0,0,0,0.12);
       overflow: auto;
       display: none;
+      margin-top: 12px;
+      padding: 0 0 12px 0;
+      position: relative;
+      border: 1.5px solid rgba(201,209,217,0.10);
+      backdrop-filter: blur(8px) saturate(1.1);
+      min-height: 220px;
+      max-height: 420px;
     }
-    
     .code-header {
       display: flex;
       justify-content: space-between;
-      padding: 8px 12px;
-      color: rgba(255, 255, 255, 0.6);
-      font-size: 12px;
+      align-items: center;
+      padding: 12px 20px 8px 20px;
+      color: #bfc9d1;
+      font-size: 13px;
+      font-family: 'Fira Mono', 'Consolas', monospace;
+      background: rgba(34,39,46,0.18);
+      border-radius: 12px 12px 0 0;
+      border-bottom: 1px solid rgba(201,209,217,0.08);
     }
-    
-    .code-editor {
-      font-family: 'Courier New', monospace;
-      font-size: 14px;
-      line-height: 1.5;
-      padding: 8px 0;
-      tab-size: 2;
+    #code-editor {
+      background: rgba(30,32,40,0.98);
+      border-radius: 0 0 12px 12px;
+      box-shadow: 0 2px 12px 0 rgba(0,0,0,0.10);
+      padding: 24px 18px 24px 18px;
+      font-family: 'Fira Mono', 'Consolas', 'Courier New', monospace;
+      font-size: 15px;
+      color: #e3e6eb;
+      min-height: 220px;
+      max-height: 340px;
+      overflow-x: auto;
+      overflow-y: auto;
+      margin: 0;
+      white-space: pre;
+      transition: background 0.2s;
+      outline: none;
+      border: none;
+      box-sizing: border-box;
     }
-    
-    .code-line {
-      display: flex;
+    #code-editor code {
+      background: none;
+      color: inherit;
+      font-family: inherit;
+      font-size: inherit;
+      line-height: 1.7;
+      padding: 0;
+      border: none;
+      box-shadow: none;
+      border-radius: 0;
+      outline: none;
+      white-space: pre;
+      display: block;
     }
-    
-    .line-number {
-      width: 30px;
+    #code-editor::-webkit-scrollbar {
+      width: 8px;
+      background: rgba(60,60,70,0.18);
+      border-radius: 8px;
+    }
+    #code-editor::-webkit-scrollbar-thumb {
+      background: rgba(80,80,100,0.22);
+      border-radius: 8px;
+    }
+    .code-editor .placeholder {
+      color: #ffb300;
+      font-size: 18px;
+      text-align: center;
+      opacity: 0.85;
+      margin-top: 32px;
+      letter-spacing: 0.5px;
+    }
+    .code-line-number {
+      display: inline-block;
+      width: 32px;
       text-align: right;
-      padding-right: 10px;
-      color: var(--code-line-number);
+      color: #4b4d58;
       user-select: none;
+      margin-right: 12px;
+      opacity: 0.7;
     }
-    
-    .line-content {
-      padding-left: 10px;
-    }
-    
-    .keyword { color: #ff79c6; }
-    .string { color: #f1fa8c; }
-    .comment { color: #6272a4; }
-    .number { color: #bd93f9; }
-    .property { color: #8be9fd; }
+    .keyword { color: #82aaff; }
+    .string { color: #ecc48d; }
+    .comment { color: #6c7986; }
+    .number { color: #c3e88d; }
+    .property { color: #add7ff; }
+    .error { color: #ff5252; }
     
     .button-container {
       display: flex;
@@ -377,31 +426,12 @@
     </div>
     <div class="code-container" id="preview-code">
       <div class="code-header">
-        <div>[svg name]</div>
-        <div>JAVASCRIPT <span style="background-color: white; color: black; padding: 2px; border-radius: 2px; font-size: 10px;">JS</span></div>
+        <div id="code-filename">[svg name]</div>
+        <div>JAVASCRIPT <span style="background-color: white; color: black; padding: 2px 6px; border-radius: 2px; font-size: 10px; margin-left: 4px;">JS</span></div>
       </div>
-      <pre class="code-editor">
-        <div class="code-line"><span class="line-number">1</span><span class="line-content">html, body, div, span, applet, object, iframe,</span></div>
-        <div class="code-line"><span class="line-number">2</span><span class="line-content">h1, h2, h3, h4, h5, h6, p {</span></div>
-        <div class="code-line"><span class="line-number">3</span><span class="line-content">  <span class="property">margin</span>: <span class="number">0</span>;</span></div>
-        <div class="code-line"><span class="line-number">4</span><span class="line-content">  <span class="property">padding</span>: <span class="number">0</span>;</span></div>
-        <div class="code-line"><span class="line-number">5</span><span class="line-content">  <span class="property">border</span>: <span class="number">0</span>;</span></div>
-        <div class="code-line"><span class="line-number">6</span><span class="line-content">  <span class="property">font-size</span>: <span class="number">100%</span>;</span></div>
-        <div class="code-line"><span class="line-number">7</span><span class="line-content">  <span class="property">font</span>: <span class="keyword">inherit</span>;</span></div>
-        <div class="code-line"><span class="line-number">8</span><span class="line-content">  <span class="property">vertical-align</span>: <span class="keyword">baseline</span>;</span></div>
-        <div class="code-line"><span class="line-number">9</span><span class="line-content">}</span></div>
-        <div class="code-line"><span class="line-number">10</span><span class="line-content"><span class="comment">/* HTML5 display-role reset for older browsers */</span></span></div>
-        <div class="code-line"><span class="line-number">11</span><span class="line-content">article, aside, details, figcaption, figure,</span></div>
-        <div class="code-line"><span class="line-number">12</span><span class="line-content">footer, header, hgroup, menu, nav, section {</span></div>
-        <div class="code-line"><span class="line-number">13</span><span class="line-content">  <span class="property">display</span>: <span class="keyword">block</span>;</span></div>
-        <div class="code-line"><span class="line-number">14</span><span class="line-content">}</span></div>
-        <div class="code-line"><span class="line-number">15</span><span class="line-content">body {</span></div>
-        <div class="code-line"><span class="line-number">16</span><span class="line-content">  <span class="property">line-height</span>: <span class="number">1</span>;</span></div>
-        <div class="code-line"><span class="line-number">17</span><span class="line-content">}</span></div>
-        <div class="code-line"><span class="line-number">18</span><span class="line-content">ol, ul {</span></div>
-        <div class="code-line"><span class="line-number">19</span><span class="line-content">  <span class="property">list-style</span>: <span class="keyword">none</span>;</span></div>
-        <div class="code-line"><span class="line-number">20</span><span class="line-content">}</span></div>
-      </pre>
+      <pre id="code-editor" class="language-javascript"><code class="language-javascript">// Canvas drawing example\nconst canvas = document.getElementById('myCanvas');\nconst ctx = canvas.getContext('2d');\nctx.fillStyle = '#2979ff';\nctx.fillRect(20, 20, 120, 80);\nctx.strokeStyle = '#00c853';\nctx.lineWidth = 4;\nctx.strokeRect(20, 20, 120, 80);\nctx.beginPath();\nctx.arc(80, 60, 30, 0, 2 * Math.PI);\nctx.fillStyle = '#ffb300';\nctx.fill();</code></pre>
+      <script src="prism.js"></script>
+      <script src="prism-javascript.min.js"></script>
     </div>
   </div>
   
@@ -423,8 +453,10 @@
   <script>
     // Handle messages from the plugin
     window.onmessage = (event) => {
-      const message = event.data.pluginMessage;
-      
+      // Only handle messages from the Figma plugin controller
+      const message = event.data && event.data.pluginMessage;
+      if (!message) return; // Ignore unrelated messages
+
       if (message.type === 'svg-data') {
         // Update SVG preview
         const previewContainer = document.getElementById('preview-svg');
@@ -445,9 +477,13 @@
           document.getElementById('loading-animation').style.display = 'none';
           document.getElementById('preview-svg').style.display = 'none';
           document.getElementById('preview-code').style.display = 'block';
-          const codeEditor = document.querySelector('.code-editor');
-          codeEditor.innerHTML = '<div style="color: #ffb300; padding: 24px; font-size: 18px; text-align: center;">This feature is under development.</div>';
-          document.getElementById('btn-copy').style.display = 'none';
+          if (message.error) {
+            setEditorCode('');
+          } else if (message.code) {
+            setEditorCode(message.code);
+          } else {
+            setEditorCode('');
+          }
           if (window.__asciiProgressInterval) clearInterval(window.__asciiProgressInterval);
         };
         if (elapsed < minLoadingTime) {
@@ -512,7 +548,7 @@
     
     // Copy button
     document.getElementById('btn-copy').addEventListener('click', () => {
-      const codeContent = document.querySelector('.code-editor').textContent;
+      const codeContent = document.querySelector('#code-editor code').textContent;
       navigator.clipboard.writeText(codeContent).then(() => {
         const copyBtn = document.getElementById('btn-copy');
         const originalText = copyBtn.textContent;
@@ -522,6 +558,55 @@
         }, 2000);
       });
     });
+
+    // --- JS: Render code with line numbers and syntax highlighting ---
+    function renderCodeEditor(code) {
+      const editor = document.getElementById('code-editor');
+      if (!code || code.trim() === '') {
+        editor.innerHTML = '<span class="placeholder">This feature is under development.</span>';
+        document.getElementById('btn-copy').style.display = 'none';
+        return;
+      }
+      const lines = code.split('\n');
+      let html = '';
+      for (let i = 0; i < lines.length; i++) {
+        html += `<span><span class="code-line-number">${i+1}</span>${highlightSyntax(lines[i])}</span>\n`;
+      }
+      editor.innerHTML = html;
+      document.getElementById('btn-copy').style.display = 'inline-flex';
+    }
+
+    // Monaco Editor integration
+    let monacoInstance = null;
+    require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs' }});
+    require(['vs/editor/editor.main'], function () {
+      monacoInstance = monaco.editor.create(document.getElementById('code-editor'), {
+        value: `// Canvas drawing example\nconst canvas = document.getElementById('myCanvas');\nconst ctx = canvas.getContext('2d');\nctx.fillStyle = '#2979ff';\nctx.fillRect(20, 20, 120, 80);\nctx.strokeStyle = '#00c853';\nctx.lineWidth = 4;\nctx.strokeRect(20, 20, 120, 80);\nctx.beginPath();\nctx.arc(80, 60, 30, 0, 2 * Math.PI);\nctx.fillStyle = '#ffb300';\nctx.fill();`,
+        language: "javascript",
+        theme: "vs-dark",
+        fontSize: 14,
+        minimap: { enabled: false },
+        readOnly: true,
+        lineNumbers: "on",
+        roundedSelection: false,
+        scrollBeyondLastLine: false,
+        automaticLayout: true,
+      });
+    });
+    function setEditorCode(code) {
+      if (monacoInstance) {
+        monacoInstance.setValue(code && code.trim() ? code : "// This feature is under development.");
+        document.getElementById('btn-copy').style.display = (code && code.trim()) ? 'inline-flex' : 'none';
+      }
+    }
+
+    // --- JS: Dynamically update code and highlight ---
+    function updateCodeEditor(code) {
+      const codeBlock = document.querySelector('#code-editor code');
+      codeBlock.textContent = code;
+      Prism.highlightAll();
+    }
+    // Example usage: updateCodeEditor(`const foo = 'bar';`);
   </script>
 </body>
 </html>
