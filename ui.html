@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coding art : convert svg to canvasJs code</title>
+  <style>
+    :root {
+      --bg-color: #1e1f28;
+      --tab-active-bg: #2979ff;
+      --tab-inactive-bg: #252630;
+      --preview-bg: #2d2e37;
+      --text-color: #ffffff;
+      --button-green: #00c853;
+      --button-gray: #464752;
+      --code-line-number: #4b4d58;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .header {
+      padding: 16px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .header-icon {
+      width: 24px;
+      height: 24px;
+      margin-right: 10px;
+      color: #a288ff;
+    }
+    
+    .header-title {
+      font-size: 16px;
+      font-weight: 500;
+    }
+    
+    .tabs {
+      display: flex;
+      margin: 0 24px;
+    }
+    
+    .tab {
+      padding: 8px 16px;
+      cursor: pointer;
+      border-radius: 4px 4px 0 0;
+      display: flex;
+      align-items: center;
+      user-select: none;
+    }
+    
+    .tab.active {
+      background-color: var(--tab-active-bg);
+    }
+    
+    .tab:not(.active) {
+      background-color: var(--tab-inactive-bg);
+    }
+    
+    .tab-icon {
+      margin-right: 8px;
+    }
+    
+    .content {
+      flex: 1;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .preview-container {
+      flex: 1;
+      background-color: var(--preview-bg);
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    
+    .svg-preview {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .code-container {
+      flex: 1;
+      background-color: var(--preview-bg);
+      border-radius: 8px;
+      overflow: auto;
+      display: none;
+    }
+    
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 12px;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 12px;
+    }
+    
+    .code-editor {
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      padding: 8px 0;
+      tab-size: 2;
+    }
+    
+    .code-line {
+      display: flex;
+    }
+    
+    .line-number {
+      width: 30px;
+      text-align: right;
+      padding-right: 10px;
+      color: var(--code-line-number);
+      user-select: none;
+    }
+    
+    .line-content {
+      padding-left: 10px;
+    }
+    
+    .keyword { color: #ff79c6; }
+    .string { color: #f1fa8c; }
+    .comment { color: #6272a4; }
+    .number { color: #bd93f9; }
+    .property { color: #8be9fd; }
+    
+    .button-container {
+      display: flex;
+      justify-content: flex-end;
+      padding: 16px 24px;
+    }
+    
+    .button {
+      padding: 8px 16px;
+      border-radius: 4px;
+      border: none;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      font-weight: 500;
+    }
+    
+    .button-icon {
+      margin-left: 8px;
+    }
+    
+    .button-convert {
+      background-color: var(--button-green);
+    }
+    
+    .button-copy {
+      background-color: var(--button-gray);
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <svg class="header-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M3 3h18v18H3V3zm16 16V5H5v14h14z"/>
+      <path d="M8 8h8v8H8V8zm6 6v-4h-4v4h4z"/>
+    </svg>
+    <div class="header-title">Coding art : convert svg to canvasJs code</div>
+  </div>
+  
+  <div class="tabs">
+    <div class="tab active" id="tab-svg">
+      <svg class="tab-icon" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M13 13v8h8v-8h-8zM3 21h8v-8H3v8zM3 3v8h8V3H3zm13.66-1.31L11 7.34 16.66 13l5.66-5.66-5.66-5.65z"/>
+      </svg>
+      SVG Preview
+    </div>
+    <div class="tab" id="tab-code">
+      <svg class="tab-icon" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
+      </svg>
+      Canvas code
+    </div>
+  </div>
+  
+  <div class="content">
+    <div class="preview-container" id="preview-svg">
+      <div class="svg-preview">
+        Here will appear you Svg Preview
+      </div>
+    </div>
+    
+    <div class="code-container" id="preview-code">
+      <div class="code-header">
+        <div>[svg name]</div>
+        <div>JAVASCRIPT <span style="background-color: white; color: black; padding: 2px; border-radius: 2px; font-size: 10px;">JS</span></div>
+      </div>
+      <pre class="code-editor">
+        <div class="code-line"><span class="line-number">1</span><span class="line-content">html, body, div, span, applet, object, iframe,</span></div>
+        <div class="code-line"><span class="line-number">2</span><span class="line-content">h1, h2, h3, h4, h5, h6, p {</span></div>
+        <div class="code-line"><span class="line-number">3</span><span class="line-content">  <span class="property">margin</span>: <span class="number">0</span>;</span></div>
+        <div class="code-line"><span class="line-number">4</span><span class="line-content">  <span class="property">padding</span>: <span class="number">0</span>;</span></div>
+        <div class="code-line"><span class="line-number">5</span><span class="line-content">  <span class="property">border</span>: <span class="number">0</span>;</span></div>
+        <div class="code-line"><span class="line-number">6</span><span class="line-content">  <span class="property">font-size</span>: <span class="number">100%</span>;</span></div>
+        <div class="code-line"><span class="line-number">7</span><span class="line-content">  <span class="property">font</span>: <span class="keyword">inherit</span>;</span></div>
+        <div class="code-line"><span class="line-number">8</span><span class="line-content">  <span class="property">vertical-align</span>: <span class="keyword">baseline</span>;</span></div>
+        <div class="code-line"><span class="line-number">9</span><span class="line-content">}</span></div>
+        <div class="code-line"><span class="line-number">10</span><span class="line-content"><span class="comment">/* HTML5 display-role reset for older browsers */</span></span></div>
+        <div class="code-line"><span class="line-number">11</span><span class="line-content">article, aside, details, figcaption, figure,</span></div>
+        <div class="code-line"><span class="line-number">12</span><span class="line-content">footer, header, hgroup, menu, nav, section {</span></div>
+        <div class="code-line"><span class="line-number">13</span><span class="line-content">  <span class="property">display</span>: <span class="keyword">block</span>;</span></div>
+        <div class="code-line"><span class="line-number">14</span><span class="line-content">}</span></div>
+        <div class="code-line"><span class="line-number">15</span><span class="line-content">body {</span></div>
+        <div class="code-line"><span class="line-number">16</span><span class="line-content">  <span class="property">line-height</span>: <span class="number">1</span>;</span></div>
+        <div class="code-line"><span class="line-number">17</span><span class="line-content">}</span></div>
+        <div class="code-line"><span class="line-number">18</span><span class="line-content">ol, ul {</span></div>
+        <div class="code-line"><span class="line-number">19</span><span class="line-content">  <span class="property">list-style</span>: <span class="keyword">none</span>;</span></div>
+        <div class="code-line"><span class="line-number">20</span><span class="line-content">}</span></div>
+      </pre>
+    </div>
+  </div>
+  
+  <div class="button-container">
+    <button class="button button-convert" id="btn-convert">
+      convert to code
+      <svg class="button-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/>
+      </svg>
+    </button>
+    <button class="button button-copy" id="btn-copy">
+      copy code
+      <svg class="button-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/>
+      </svg>
+    </button>
+  </div>
+
+  <script>
+    // Handle messages from the plugin
+    window.onmessage = (event) => {
+      const message = event.data.pluginMessage;
+      
+      if (message.type === 'svg-data') {
+        // Update SVG preview
+        const previewContainer = document.getElementById('preview-svg');
+        if (message.svg) {
+          previewContainer.innerHTML = message.svg;
+        }
+        
+        // Update code header with SVG name
+        const codeHeader = document.querySelector('.code-header div:first-child');
+        if (message.name) {
+          codeHeader.textContent = message.name;
+        }
+      } else if (message.type === 'canvas-code') {
+        // Show code container and hide preview
+        document.getElementById('preview-svg').style.display = 'none';
+        document.getElementById('preview-code').style.display = 'block';
+        
+        // Update code content
+        const codeEditor = document.querySelector('.code-editor');
+        const lines = message.code.split('\n');
+        
+        // Clear existing content
+        codeEditor.innerHTML = '';
+        
+        // Add new content with line numbers
+        lines.forEach((line, index) => {
+          const lineDiv = document.createElement('div');
+          lineDiv.className = 'code-line';
+          
+          const lineNumber = document.createElement('span');
+          lineNumber.className = 'line-number';
+          lineNumber.textContent = index + 1;
+          
+          const lineContent = document.createElement('span');
+          lineContent.className = 'line-content';
+          
+          // Apply syntax highlighting
+          lineContent.innerHTML = highlightSyntax(line);
+          
+          lineDiv.appendChild(lineNumber);
+          lineDiv.appendChild(lineContent);
+          codeEditor.appendChild(lineDiv);
+        });
+        
+        // Show copy button
+        document.getElementById('btn-copy').style.display = 'flex';
+      }
+    };
+    
+    // Syntax highlighting function
+    function highlightSyntax(code) {
+      return code
+        .replace(/(\/\/.*$)/gm, '<span class="comment">$1</span>')
+        .replace(/\b(const|let|var|function|return|if|else|switch|case|break|for|while|do|try|catch|finally|throw|new|this|class|extends|super|import|export|default|async|await)\b/g, '<span class="keyword">$1</span>')
+        .replace(/\b(true|false|null|undefined)\b/g, '<span class="keyword">$1</span>')
+        .replace(/(["'`])(.*?)\1/g, '<span class="string">$1$2$1</span>')
+        .replace(/\b(\d+(\.\d+)?)\b/g, '<span class="number">$1</span>')
+        .replace(/\b([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, '<span class="property">$1</span>:');
+    }
+    
+    // Tab switching
+    document.getElementById('tab-svg').addEventListener('click', () => {
+      document.getElementById('tab-svg').classList.add('active');
+      document.getElementById('tab-code').classList.remove('active');
+      document.getElementById('preview-svg').style.display = 'flex';
+      document.getElementById('preview-code').style.display = 'none';
+    });
+    
+    document.getElementById('tab-code').addEventListener('click', () => {
+      document.getElementById('tab-code').classList.add('active');
+      document.getElementById('tab-svg').classList.remove('active');
+      document.getElementById('preview-code').style.display = 'block';
+      document.getElementById('preview-svg').style.display = 'none';
+    });
+    
+    // Convert button
+    document.getElementById('btn-convert').addEventListener('click', () => {
+      parent.postMessage({ pluginMessage: { type: 'convert-to-canvas' } }, '*');
+    });
+    
+    // Copy button
+    document.getElementById('btn-copy').addEventListener('click', () => {
+      const codeContent = document.querySelector('.code-editor').textContent;
+      navigator.clipboard.writeText(codeContent).then(() => {
+        const copyBtn = document.getElementById('btn-copy');
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => {
+          copyBtn.textContent = originalText;
+        }, 2000);
+      });
+    });
+  </script>
+</body>
+</html>
