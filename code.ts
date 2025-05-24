@@ -177,7 +177,7 @@ async function handleSelection(selection: readonly SceneNode[]): Promise<void> {
 }
 
 // Handle messages from the UI
-figma.ui.onmessage = (msg: { type: string; tab?: string }) => {
+figma.ui.onmessage = (msg: { type: string; tab?: string; code?: string }) => {
   if (msg.type === 'tab-changed' && 'tab' in msg) {
     svgPreviewTabActive = msg.tab === 'svg';
     // If switching to SVG tab, immediately update preview
@@ -193,6 +193,15 @@ figma.ui.onmessage = (msg: { type: string; tab?: string }) => {
     return;
   } else if (msg.type === 'cancel') {
     figma.closePlugin();
+  } else if (msg.type === 'copy-to-clipboard') {
+    // Type guard for clipboard
+    const clipboard = (figma as unknown as { clipboard?: { writeText: (text: string) => void } }).clipboard;
+    if (clipboard && typeof clipboard.writeText === 'function' && msg.code) {
+      clipboard.writeText(msg.code);
+      figma.notify('Code copied to clipboard!');
+    } else {
+      figma.notify('Clipboard API not available. Please update Figma or plugin typings.');
+    }
   }
 };
 

@@ -17,7 +17,9 @@
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "eslint": "^8.57.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "webpack": "^5.99.9",
+    "webpack-cli": "^6.0.1"
   },
   "eslintConfig": {
     "extends": [
@@ -42,6 +44,9 @@
     }
   },
   "dependencies": {
+    "ace-builds": "^1.41.0",
+    "codemirror": "^5.65.16",
+    "monaco-editor": "^0.52.2",
     "prismjs": "^1.30.0"
   }
 }

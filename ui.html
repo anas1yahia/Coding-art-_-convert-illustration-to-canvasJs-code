@@ -5,7 +5,123 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Coding art : convert svg to canvasJs code</title>
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js"></script>
+  
+  <!-- Embed Simple Code Editor directly to avoid loading issues -->
+  <script>
+    // Simple Code Editor for Figma Plugin
+    class SimpleCodeEditor {
+      constructor(elementId, options = {}) {
+        this.element = document.getElementById(elementId);
+        if (!this.element) {
+          throw new Error(`Element with id "${elementId}" not found`);
+        }
+
+        this.options = {
+          value: options.value || '',
+          lineNumbers: options.lineNumbers !== false,
+          tabSize: options.tabSize || 2,
+          theme: options.theme || 'dark'
+        };
+
+        this.setupEditor();
+      }
+
+      setupEditor() {
+        // Create wrapper for line numbers and editor
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'relative';
+        wrapper.style.width = '100%';
+        wrapper.style.height = '100%';
+        wrapper.style.display = 'flex';
+        wrapper.style.background = '#1e1f28';
+        wrapper.style.borderRadius = '0 0 12px 12px';
+        wrapper.style.overflow = 'hidden';
+
+        // Create line numbers container
+        if (this.options.lineNumbers) {
+          const lineNumbers = document.createElement('div');
+          lineNumbers.className = 'line-numbers';
+          lineNumbers.style.width = '45px';
+          lineNumbers.style.padding = '24px 10px 24px 0';
+          lineNumbers.style.textAlign = 'right';
+          lineNumbers.style.color = '#6c7986';
+          lineNumbers.style.fontFamily = "'Fira Mono', 'Consolas', monospace";
+          lineNumbers.style.fontSize = '14px';
+          lineNumbers.style.lineHeight = '22.4px';
+          lineNumbers.style.userSelect = 'none';
+          lineNumbers.style.background = 'rgba(22,24,30,0.8)';
+          lineNumbers.style.borderRight = '1px solid rgba(201,209,217,0.08)';
+          wrapper.appendChild(lineNumbers);
+          this.lineNumbers = lineNumbers;
+        }
+
+        // Create textarea for editing
+        const textarea = document.createElement('textarea');
+        textarea.className = 'editor-textarea';
+        textarea.value = this.options.value;
+        textarea.style.flex = '1';
+        textarea.style.padding = '24px 20px';
+        textarea.style.background = 'transparent';
+        textarea.style.border = 'none';
+        textarea.style.outline = 'none';
+        textarea.style.color = '#d4d4d4';
+        textarea.style.fontFamily = "'Fira Mono', 'Consolas', monospace";
+        textarea.style.fontSize = '14px';
+        textarea.style.lineHeight = '22.4px';
+        textarea.style.resize = 'none';
+        textarea.style.whiteSpace = 'pre';
+        textarea.style.tabSize = this.options.tabSize;
+        
+        wrapper.appendChild(textarea);
+        this.element.appendChild(wrapper);
+        this.textarea = textarea;
+
+        // Update line numbers
+        this.updateLineNumbers();
+        
+        // Listen for changes
+        textarea.addEventListener('input', () => {
+          this.updateLineNumbers();
+        });
+        
+        textarea.addEventListener('scroll', () => {
+          if (this.lineNumbers) {
+            this.lineNumbers.scrollTop = textarea.scrollTop;
+          }
+        });
+
+        // Set up global editor interface
+        window.monacoEditor = {
+          getValue: () => this.getValue(),
+          setValue: (value) => this.setValue(value)
+        };
+      }
+
+      updateLineNumbers() {
+        if (!this.lineNumbers) return;
+        
+        const lines = this.textarea.value.split('\n');
+        const lineCount = lines.length;
+        
+        let lineNumbersHtml = '';
+        for (let i = 1; i <= lineCount; i++) {
+          lineNumbersHtml += `${i}\n`;
+        }
+        
+        this.lineNumbers.textContent = lineNumbersHtml;
+      }
+
+      getValue() {
+        return this.textarea.value;
+      }
+
+      setValue(value) {
+        this.textarea.value = value;
+        this.updateLineNumbers();
+      }
+    }
+  </script>
+  
   <link rel="stylesheet" href="prism-dark.css">
   <style>
     :root {
@@ -128,46 +244,11 @@
       border-bottom: 1px solid rgba(201,209,217,0.08);
     }
     #code-editor {
-      background: rgba(30,32,40,0.98);
+      position: relative;
+      width: 100%;
+      height: 320px;
       border-radius: 0 0 12px 12px;
-      box-shadow: 0 2px 12px 0 rgba(0,0,0,0.10);
-      padding: 24px 18px 24px 18px;
-      font-family: 'Fira Mono', 'Consolas', 'Courier New', monospace;
-      font-size: 15px;
-      color: #e3e6eb;
-      min-height: 220px;
-      max-height: 340px;
-      overflow-x: auto;
-      overflow-y: auto;
-      margin: 0;
-      white-space: pre;
-      transition: background 0.2s;
-      outline: none;
-      border: none;
-      box-sizing: border-box;
-    }
-    #code-editor code {
-      background: none;
-      color: inherit;
-      font-family: inherit;
-      font-size: inherit;
-      line-height: 1.7;
-      padding: 0;
-      border: none;
-      box-shadow: none;
-      border-radius: 0;
-      outline: none;
-      white-space: pre;
-      display: block;
-    }
-    #code-editor::-webkit-scrollbar {
-      width: 8px;
-      background: rgba(60,60,70,0.18);
-      border-radius: 8px;
-    }
-    #code-editor::-webkit-scrollbar-thumb {
-      background: rgba(80,80,100,0.22);
-      border-radius: 8px;
+      font-size: 14px;
     }
     .code-editor .placeholder {
       color: #ffb300;
@@ -335,6 +416,91 @@
       0% { transform: translateX(-60px); }
       100% { transform: translateX(340px); }
     }
+    .code-editor-wrapper {
+      position: relative;
+      width: 100%;
+      height: 320px;
+      border-radius: 0 0 12px 12px;
+      overflow: hidden;
+      background: rgba(30,32,40,0.98);
+      display: flex;
+    }
+    .line-numbers {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 45px;
+      height: 100%;
+      background: rgba(22,24,30,0.8);
+      color: #6c7986;
+      font-family: 'Fira Mono', 'Consolas', 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 22.4px;
+      padding: 24px 10px 24px 0;
+      text-align: right;
+      user-select: none;
+      overflow: hidden;
+      border-right: 1px solid rgba(201,209,217,0.08);
+    }
+    .fallback-editor {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      color: #e3e6eb;
+      font-family: 'Fira Mono', 'Consolas', 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 22.4px;
+      padding: 24px 20px;
+      border: none;
+      outline: none;
+      resize: none;
+      overflow: auto;
+    }
+    .fallback-editor-with-lines {
+      padding-left: 65px !important;
+    }
+    .fallback-editor::-webkit-scrollbar {
+      width: 8px;
+      background: rgba(60,60,70,0.18);
+    }
+    .fallback-editor::-webkit-scrollbar-thumb {
+      background: rgba(80,80,100,0.32);
+      border-radius: 4px;
+    }
+    .fallback-editor::-webkit-scrollbar-thumb:hover {
+      background: rgba(80,80,100,0.42);
+    }
+    /* Syntax highlighting colors for visual reference - won't work in textarea but helps guide the design */
+    .code-comment { color: #6c7986; }
+    .code-keyword { color: #82aaff; }
+    .code-string { color: #c3e88d; }
+    .code-number { color: #f78c6c; }
+    /* CodeMirror custom styling */
+    .CodeMirror {
+      height: 320px;
+      border-radius: 0 0 12px 12px;
+      font-family: 'Fira Mono', 'Consolas', 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .CodeMirror-gutters {
+      background: rgba(22,24,30,0.8);
+      border-right: 1px solid rgba(201,209,217,0.08);
+    }
+    .CodeMirror-linenumber {
+      color: #6c7986;
+      padding: 0 8px;
+    }
+    .cm-s-material-darker.CodeMirror {
+      background: rgba(30,32,40,0.98);
+      color: #e3e6eb;
+    }
+    .cm-s-material-darker .CodeMirror-cursor {
+      border-left: 2px solid #82aaff;
+    }
   </style>
 </head>
 <body>
@@ -429,9 +595,7 @@
         <div id="code-filename">[svg name]</div>
         <div>JAVASCRIPT <span style="background-color: white; color: black; padding: 2px 6px; border-radius: 2px; font-size: 10px; margin-left: 4px;">JS</span></div>
       </div>
-      <pre id="code-editor" class="language-javascript"><code class="language-javascript">// Canvas drawing example\nconst canvas = document.getElementById('myCanvas');\nconst ctx = canvas.getContext('2d');\nctx.fillStyle = '#2979ff';\nctx.fillRect(20, 20, 120, 80);\nctx.strokeStyle = '#00c853';\nctx.lineWidth = 4;\nctx.strokeRect(20, 20, 120, 80);\nctx.beginPath();\nctx.arc(80, 60, 30, 0, 2 * Math.PI);\nctx.fillStyle = '#ffb300';\nctx.fill();</code></pre>
-      <script src="prism.js"></script>
-      <script src="prism-javascript.min.js"></script>
+      <div id="code-editor"></div>
     </div>
   </div>
   
@@ -451,6 +615,134 @@
   </div>
 
   <script>
+    // Fallback editor function
+    function initializeFallbackEditor() {
+      console.log('Initializing fallback editor...');
+      const editorDiv = document.getElementById('code-editor');
+      editorDiv.innerHTML = `<textarea style="
+        width: 100%;
+        height: 320px;
+        background: #1e1e1e;
+        color: #d4d4d4;
+        border: none;
+        outline: none;
+        padding: 20px;
+        font-family: 'Fira Mono', 'Consolas', monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        resize: none;
+        border-radius: 0 0 12px 12px;
+      " id="fallback-textarea"></textarea>`;
+      
+      const textarea = document.getElementById('fallback-textarea');
+      textarea.value = `// Canvas drawing example
+const canvas = document.getElementById('myCanvas');
+const ctx = canvas.getContext('2d');
+ctx.fillStyle = '#2979ff';
+ctx.fillRect(20, 20, 120, 80);
+ctx.strokeStyle = '#00c853';
+ctx.lineWidth = 4;
+ctx.strokeRect(20, 20, 120, 80);
+ctx.beginPath();
+ctx.arc(80, 60, 30, 0, 2 * Math.PI);
+ctx.fillStyle = '#ffb300';
+ctx.fill();`;
+      
+      // Set up global editor interface
+      window.monacoEditor = {
+        getValue: function() { return textarea.value; },
+        setValue: function(value) { textarea.value = value; }
+      };
+    }
+
+    // Initialize Simple Code Editor
+    function initializeSimpleEditor() {
+      console.log('Initializing Simple Code Editor...');
+      
+      try {
+        // Check if SimpleCodeEditor is available
+        if (typeof SimpleCodeEditor === 'undefined') {
+          console.warn('SimpleCodeEditor not available, using fallback');
+          initializeFallbackEditor();
+          return;
+        }
+        
+        const editor = new SimpleCodeEditor('code-editor', {
+          value: `// Canvas drawing example
+const canvas = document.getElementById('myCanvas');
+const ctx = canvas.getContext('2d');
+ctx.fillStyle = '#2979ff';
+ctx.fillRect(20, 20, 120, 80);
+ctx.strokeStyle = '#00c853';
+ctx.lineWidth = 4;
+ctx.strokeRect(20, 20, 120, 80);
+ctx.beginPath();
+ctx.arc(80, 60, 30, 0, 2 * Math.PI);
+ctx.fillStyle = '#ffb300';
+ctx.fill();`,
+          lineNumbers: true,
+          tabSize: 2
+        });
+        
+        // Store globally with consistent API
+        window.codeEditor = editor;
+        window.monacoEditor = {
+          getValue: function() { return editor.getValue(); },
+          setValue: function(value) { editor.setValue(value); },
+          refresh: function() { editor.refresh(); }
+        };
+        
+        console.log('Simple Code Editor initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize Simple Code Editor:', error);
+        // Fall back to basic textarea
+        createBasicFallback();
+      }
+    }
+
+    // Basic fallback (just in case)
+    function createBasicFallback() {
+      const editorDiv = document.getElementById('code-editor');
+      editorDiv.innerHTML = `<textarea style="
+        width: 100%;
+        height: 320px;
+        background: #1e1e1e;
+        color: #d4d4d4;
+        border: none;
+        outline: none;
+        padding: 20px;
+        font-family: 'Fira Mono', 'Consolas', monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        resize: none;
+      " id="basic-textarea"></textarea>`;
+      
+      const textarea = document.getElementById('basic-textarea');
+      textarea.value = `// Canvas drawing example
+const canvas = document.getElementById('myCanvas');
+const ctx = canvas.getContext('2d');
+ctx.fillStyle = '#2979ff';
+ctx.fillRect(20, 20, 120, 80);
+ctx.strokeStyle = '#00c853';
+ctx.lineWidth = 4;
+ctx.strokeRect(20, 20, 120, 80);
+ctx.beginPath();
+ctx.arc(80, 60, 30, 0, 2 * Math.PI);
+ctx.fillStyle = '#ffb300';
+ctx.fill();`;
+      
+      window.monacoEditor = {
+        getValue: function() { return textarea.value; },
+        setValue: function(value) { textarea.value = value; }
+      };
+    }
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM loaded, initializing editor...');
+      initializeSimpleEditor();
+    });
+
     // Handle messages from the plugin
     window.onmessage = (event) => {
       // Only handle messages from the Figma plugin controller
@@ -548,65 +840,33 @@
     
     // Copy button
     document.getElementById('btn-copy').addEventListener('click', () => {
-      const codeContent = document.querySelector('#code-editor code').textContent;
-      navigator.clipboard.writeText(codeContent).then(() => {
-        const copyBtn = document.getElementById('btn-copy');
-        const originalText = copyBtn.textContent;
-        copyBtn.textContent = 'Copied!';
-        setTimeout(() => {
-          copyBtn.textContent = originalText;
-        }, 2000);
-      });
+      parent.postMessage({ pluginMessage: { type: 'copy-to-clipboard', code: window.monacoEditor.getValue() } }, '*');
+      // Optionally show a UI notification here
+      const copyBtn = document.getElementById('btn-copy');
+      const originalText = copyBtn.textContent;
+      copyBtn.textContent = 'Copied!';
+      setTimeout(() => {
+        copyBtn.textContent = originalText;
+      }, 2000);
     });
 
-    // --- JS: Render code with line numbers and syntax highlighting ---
-    function renderCodeEditor(code) {
-      const editor = document.getElementById('code-editor');
-      if (!code || code.trim() === '') {
-        editor.innerHTML = '<span class="placeholder">This feature is under development.</span>';
-        document.getElementById('btn-copy').style.display = 'none';
-        return;
-      }
-      const lines = code.split('\n');
-      let html = '';
-      for (let i = 0; i < lines.length; i++) {
-        html += `<span><span class="code-line-number">${i+1}</span>${highlightSyntax(lines[i])}</span>\n`;
-      }
-      editor.innerHTML = html;
-      document.getElementById('btn-copy').style.display = 'inline-flex';
-    }
-
-    // Monaco Editor integration
-    let monacoInstance = null;
-    require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs' }});
-    require(['vs/editor/editor.main'], function () {
-      monacoInstance = monaco.editor.create(document.getElementById('code-editor'), {
-        value: `// Canvas drawing example\nconst canvas = document.getElementById('myCanvas');\nconst ctx = canvas.getContext('2d');\nctx.fillStyle = '#2979ff';\nctx.fillRect(20, 20, 120, 80);\nctx.strokeStyle = '#00c853';\nctx.lineWidth = 4;\nctx.strokeRect(20, 20, 120, 80);\nctx.beginPath();\nctx.arc(80, 60, 30, 0, 2 * Math.PI);\nctx.fillStyle = '#ffb300';\nctx.fill();`,
-        language: "javascript",
-        theme: "vs-dark",
-        fontSize: 14,
-        minimap: { enabled: false },
-        readOnly: true,
-        lineNumbers: "on",
-        roundedSelection: false,
-        scrollBeyondLastLine: false,
-        automaticLayout: true,
-      });
-    });
+    // To update code dynamically:
     function setEditorCode(code) {
-      if (monacoInstance) {
-        monacoInstance.setValue(code && code.trim() ? code : "// This feature is under development.");
+      if (window.monacoEditor) {
+        if (window.monacoEditor.setValue) {
+          window.monacoEditor.setValue(code && code.trim() ? code : "// This feature is under development.");
+        } else if (window.monacoEditor.element) {
+          // For enhanced fallback editor
+          window.monacoEditor.element.value = code && code.trim() ? code : "// This feature is under development.";
+          // Trigger input event to update line numbers
+          window.monacoEditor.element.dispatchEvent(new Event('input'));
+        } else {
+          // For simple fallback
+          window.monacoEditor.value = code && code.trim() ? code : "// This feature is under development.";
+        }
         document.getElementById('btn-copy').style.display = (code && code.trim()) ? 'inline-flex' : 'none';
       }
     }
-
-    // --- JS: Dynamically update code and highlight ---
-    function updateCodeEditor(code) {
-      const codeBlock = document.querySelector('#code-editor code');
-      codeBlock.textContent = code;
-      Prism.highlightAll();
-    }
-    // Example usage: updateCodeEditor(`const foo = 'bar';`);
   </script>
 </body>
 </html>

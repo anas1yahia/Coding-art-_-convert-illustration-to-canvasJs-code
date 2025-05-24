@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test SimpleCodeEditor Fix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1e1f28;
+            color: white;
+        }
+        .test-container {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 8px;
+        }
+        #code-editor {
+            height: 300px;
+            border: 1px solid #444;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>SimpleCodeEditor Test</h1>
+    
+    <div class="test-container">
+        <h2>Code Editor Test</h2>
+        <div id="code-editor"></div>
+        <button onclick="testEditor()">Test Editor Functions</button>
+        <div id="output"></div>
+    </div>
+
+    <!-- Embed Simple Code Editor directly -->
+    <script>
+        // Simple Code Editor for Figma Plugin
+        class SimpleCodeEditor {
+            constructor(elementId, options = {}) {
+                this.element = document.getElementById(elementId);
+                if (!this.element) {
+                    throw new Error(`Element with id "${elementId}" not found`);
+                }
+
+                this.options = {
+                    value: options.value || '',
+                    lineNumbers: options.lineNumbers !== false,
+                    tabSize: options.tabSize || 2,
+                    theme: options.theme || 'dark'
+                };
+
+                this.setupEditor();
+            }
+
+            setupEditor() {
+                // Create wrapper for line numbers and editor
+                const wrapper = document.createElement('div');
+                wrapper.style.position = 'relative';
+                wrapper.style.width = '100%';
+                wrapper.style.height = '100%';
+                wrapper.style.display = 'flex';
+                wrapper.style.background = '#1e1f28';
+                wrapper.style.borderRadius = '0 0 12px 12px';
+                wrapper.style.overflow = 'hidden';
+
+                // Create line numbers container
+                if (this.options.lineNumbers) {
+                    const lineNumbers = document.createElement('div');
+                    lineNumbers.className = 'line-numbers';
+                    lineNumbers.style.width = '45px';
+                    lineNumbers.style.padding = '24px 10px 24px 0';
+                    lineNumbers.style.textAlign = 'right';
+                    lineNumbers.style.color = '#6c7986';
+                    lineNumbers.style.fontFamily = "'Fira Mono', 'Consolas', monospace";
+                    lineNumbers.style.fontSize = '14px';
+                    lineNumbers.style.lineHeight = '22.4px';
+                    lineNumbers.style.userSelect = 'none';
+                    lineNumbers.style.background = 'rgba(22,24,30,0.8)';
+                    lineNumbers.style.borderRight = '1px solid rgba(201,209,217,0.08)';
+                    wrapper.appendChild(lineNumbers);
+                    this.lineNumbers = lineNumbers;
+                }
+
+                // Create textarea for editing
+                const textarea = document.createElement('textarea');
+                textarea.className = 'editor-textarea';
+                textarea.value = this.options.value;
+                textarea.style.flex = '1';
+                textarea.style.padding = '24px 20px';
+                textarea.style.background = 'transparent';
+                textarea.style.border = 'none';
+                textarea.style.outline = 'none';
+                textarea.style.color = '#d4d4d4';
+                textarea.style.fontFamily = "'Fira Mono', 'Consolas', monospace";
+                textarea.style.fontSize = '14px';
+                textarea.style.lineHeight = '22.4px';
+                textarea.style.resize = 'none';
+                textarea.style.whiteSpace = 'pre';
+                textarea.style.tabSize = this.options.tabSize;
+                
+                wrapper.appendChild(textarea);
+                this.element.appendChild(wrapper);
+                this.textarea = textarea;
+
+                // Update line numbers
+                this.updateLineNumbers();
+                
+                // Listen for changes
+                textarea.addEventListener('input', () => {
+                    this.updateLineNumbers();
+                });
+                
+                textarea.addEventListener('scroll', () => {
+                    if (this.lineNumbers) {
+                        this.lineNumbers.scrollTop = textarea.scrollTop;
+                    }
+                });
+
+                // Set up global editor interface
+                window.monacoEditor = {
+                    getValue: () => this.getValue(),
+                    setValue: (value) => this.setValue(value)
+                };
+            }
+
+            updateLineNumbers() {
+                if (!this.lineNumbers) return;
+                
+                const lines = this.textarea.value.split('\n');
+                const lineCount = lines.length;
+                
+                let lineNumbersHtml = '';
+                for (let i = 1; i <= lineCount; i++) {
+                    lineNumbersHtml += `${i}\n`;
+                }
+                
+                this.lineNumbers.textContent = lineNumbersHtml;
+            }
+
+            getValue() {
+                return this.textarea.value;
+            }
+
+            setValue(value) {
+                this.textarea.value = value;
+                this.updateLineNumbers();
+            }
+        }
+
+        // Initialize when DOM is ready
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, testing SimpleCodeEditor...');
+            
+            try {
+                const editor = new SimpleCodeEditor('code-editor', {
+                    value: `// Canvas drawing example
+const canvas = document.getElementById('myCanvas');
+const ctx = canvas.getContext('2d');
+ctx.fillStyle = '#2979ff';
+ctx.fillRect(20, 20, 120, 80);
+ctx.strokeStyle = '#00c853';
+ctx.lineWidth = 4;
+ctx.strokeRect(20, 20, 120, 80);
+ctx.beginPath();
+ctx.arc(80, 60, 30, 0, 2 * Math.PI);
+ctx.fillStyle = '#ffb300';
+ctx.fill();`,
+                    lineNumbers: true,
+                    tabSize: 2
+                });
+                
+                console.log('SimpleCodeEditor initialized successfully');
+                document.getElementById('output').innerHTML = '<p style="color: green;">✓ SimpleCodeEditor loaded successfully!</p>';
+                window.testEditor = editor;
+                
+            } catch (error) {
+                console.error('Failed to initialize SimpleCodeEditor:', error);
+                document.getElementById('output').innerHTML = '<p style="color: red;">✗ SimpleCodeEditor failed: ' + error.message + '</p>';
+            }
+        });
+
+        function testEditor() {
+            if (window.testEditor && window.monacoEditor) {
+                const currentValue = window.monacoEditor.getValue();
+                document.getElementById('output').innerHTML = '<p style="color: blue;">Current editor content length: ' + currentValue.length + ' characters</p>';
+                
+                // Test setting new value
+                window.monacoEditor.setValue('// Test code\nconsole.log("Hello from editor!");');
+                
+                setTimeout(() => {
+                    const newValue = window.monacoEditor.getValue();
+                    document.getElementById('output').innerHTML += '<p style="color: green;">✓ setValue/getValue test passed! New length: ' + newValue.length + '</p>';
+                }, 100);
+            } else {
+                document.getElementById('output').innerHTML = '<p style="color: red;">✗ Editor not available for testing</p>';
+            }
+        }
+    </script>
+</body>
+</html>

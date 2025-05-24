@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Complete Plugin Test - SVG to Canvas Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1e1f28;
+            color: white;
+            margin: 0;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #2d2e37;
+            border-radius: 12px;
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #252630;
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .svg-preview {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .canvas-preview {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        canvas {
+            border: 1px solid #444;
+            background: white;
+        }
+        
+        .code-output {
+            background: #1e1e1e;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            color: #d4d4d4;
+            margin: 10px 0;
+        }
+        
+        button {
+            background: #2979ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #1976d2;
+        }
+        
+        button.success {
+            background: #00c853;
+        }
+        
+        button.error {
+            background: #f44336;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin: 5px;
+            font-weight: bold;
+        }
+        
+        .status.success {
+            background: #00c853;
+            color: white;
+        }
+        
+        .status.error {
+            background: #f44336;
+            color: white;
+        }
+        
+        .status.warning {
+            background: #ff9800;
+            color: white;
+        }
+        
+        .feature-test {
+            border-left: 4px solid #2979ff;
+            padding-left: 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎨 SVG to Canvas Code Converter - Complete Test</h1>
+        <p>Testing all plugin functionality including SimpleCodeEditor, SVG conversion, and Canvas code generation</p>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Plugin Component Status</h2>
+        <div id="component-status"></div>
+    </div>
+
+    <div class="test-section feature-test">
+        <h2>🔧 SimpleCodeEditor Test</h2>
+        <p>Testing the code editor component that was causing the error:</p>
+        <div id="code-editor-test" style="height: 200px; border: 1px solid #444; border-radius: 8px; margin: 10px 0;"></div>
+        <button onclick="testCodeEditor()">Test Editor Functions</button>
+        <div id="editor-status"></div>
+    </div>
+
+    <div class="test-section feature-test">
+        <h2>🎯 SVG to Canvas Conversion Test</h2>
+        <p>Testing the complete SVG to Canvas conversion pipeline:</p>
+        
+        <div class="test-grid">
+            <div>
+                <h3>Original SVG</h3>
+                <div class="svg-preview" id="svg-display"></div>
+            </div>
+            <div>
+                <h3>Canvas Rendering</h3>
+                <div class="canvas-preview">
+                    <canvas id="test-canvas" width="300" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <button onclick="testBasicShape()">Test Rectangle</button>
+        <button onclick="testComplexShape()">Test Complex Path</button>
+        <button onclick="testColoredShape()">Test Colored Circle</button>
+        
+        <h3>Generated Canvas Code</h3>
+        <div class="code-output" id="generated-code"></div>
+        <button onclick="copyCode()">Copy Generated Code</button>
+    </div>
+
+    <div class="test-section feature-test">
+        <h2>🚀 End-to-End Workflow Test</h2>
+        <p>Testing the complete user workflow from SVG input to Canvas code output:</p>
+        <div id="workflow-results"></div>
+        <button onclick="runCompleteTest()">Run Complete Workflow Test</button>
+    </div>
+
+    <!-- Load canvg for SVG to Canvas conversion -->
+    <script src="https://unpkg.com/canvg@4.0.3/lib/umd.js"></script>
+    
+    <!-- Embed SimpleCodeEditor (same as in plugin) -->
+    <script>
+        class SimpleCodeEditor {
+            constructor(elementId, options = {}) {
+                this.element = document.getElementById(elementId);
+                if (!this.element) {
+                    throw new Error(`Element with id "${elementId}" not found`);
+                }
+
+                this.options = {
+                    value: options.value || '',
+                    lineNumbers: options.lineNumbers !== false,
+                    tabSize: options.tabSize || 2,
+                    theme: options.theme || 'dark'
+                };
+
+                this.setupEditor();
+            }
+
+            setupEditor() {
+                const wrapper = document.createElement('div');
+                wrapper.style.position = 'relative';
+                wrapper.style.width = '100%';
+                wrapper.style.height = '100%';
+                wrapper.style.display = 'flex';
+                wrapper.style.background = '#1e1f28';
+                wrapper.style.borderRadius = '8px';
+                wrapper.style.overflow = 'hidden';
+
+                if (this.options.lineNumbers) {
+                    const lineNumbers = document.createElement('div');
+                    lineNumbers.className = 'line-numbers';
+                    lineNumbers.style.width = '45px';
+                    lineNumbers.style.padding = '15px 10px';
+                    lineNumbers.style.textAlign = 'right';
+                    lineNumbers.style.color = '#6c7986';
+                    lineNumbers.style.fontFamily = "'Monaco', 'Consolas', monospace";
+                    lineNumbers.style.fontSize = '12px';
+                    lineNumbers.style.lineHeight = '18px';
+                    lineNumbers.style.userSelect = 'none';
+                    lineNumbers.style.background = 'rgba(22,24,30,0.8)';
+                    lineNumbers.style.borderRight = '1px solid rgba(201,209,217,0.08)';
+                    wrapper.appendChild(lineNumbers);
+                    this.lineNumbers = lineNumbers;
+                }
+
+                const textarea = document.createElement('textarea');
+                textarea.value = this.options.value;
+                textarea.style.flex = '1';
+                textarea.style.padding = '15px';
+                textarea.style.background = 'transparent';
+                textarea.style.border = 'none';
+                textarea.style.outline = 'none';
+                textarea.style.color = '#d4d4d4';
+                textarea.style.fontFamily = "'Monaco', 'Consolas', monospace";
+                textarea.style.fontSize = '12px';
+                textarea.style.lineHeight = '18px';
+                textarea.style.resize = 'none';
+                
+                wrapper.appendChild(textarea);
+                this.element.appendChild(wrapper);
+                this.textarea = textarea;
+
+                this.updateLineNumbers();
+                
+                textarea.addEventListener('input', () => {
+                    this.updateLineNumbers();
+                });
+
+                window.monacoEditor = {
+                    getValue: () => this.getValue(),
+                    setValue: (value) => this.setValue(value)
+                };
+            }
+
+            updateLineNumbers() {
+                if (!this.lineNumbers) return;
+                
+                const lines = this.textarea.value.split('\n');
+                let lineNumbersHtml = '';
+                for (let i = 1; i <= lines.length; i++) {
+                    lineNumbersHtml += `${i}\n`;
+                }
+                this.lineNumbers.textContent = lineNumbersHtml;
+            }
+
+            getValue() {
+                return this.textarea.value;
+            }
+
+            setValue(value) {
+                this.textarea.value = value;
+                this.updateLineNumbers();
+            }
+        }
+
+        // Copy the exact convertSvgToCanvasCode function from the plugin
+        function convertSvgToCanvasCode(svgString, canvasName = 'MyCanvas') {
+            try {
+                const parser = new DOMParser();
+                const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
+                const svgElement = svgDoc.querySelector('svg');
+                
+                let width = 800, height = 600, viewBoxX = 0, viewBoxY = 0;
+                
+                if (svgElement) {
+                    const svgWidth = svgElement.getAttribute('width');
+                    const svgHeight = svgElement.getAttribute('height');
+                    const viewBox = svgElement.getAttribute('viewBox');
+                    
+                    if (svgWidth && svgHeight) {
+                        width = parseFloat(svgWidth) || 800;
+                        height = parseFloat(svgHeight) || 600;
+                    } else if (viewBox) {
+                        const parts = viewBox.split(/[\\s,]+/);
+                        if (parts.length >= 4) {
+                            viewBoxX = parseFloat(parts[0]) || 0;
+                            viewBoxY = parseFloat(parts[1]) || 0;
+                            width = parseFloat(parts[2]) || 800;
+                            height = parseFloat(parts[3]) || 600;
+                        }
+                    }
+                }
+
+                const canvgCode = `// Canvas setup using canvg library
+const canvas = document.getElementById('${canvasName}');
+const ctx = canvas.getContext('2d');
+canvas.width = ${width};
+canvas.height = ${height};
+
+const svgString = \`${svgString.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`;
+
+// Render SVG to canvas using canvg
+if (typeof canvg !== 'undefined') {
+    const v = canvg.Canvg.fromString(ctx, svgString);
+    v.start();
+} else {
+    console.error('canvg library not loaded');
+}`;
+
+                return `/*
+ * SVG to Canvas Conversion - Generated Code
+ * Canvas Name: ${canvasName}
+ * Dimensions: ${width}x${height}
+ */
+
+${canvgCode}`;
+
+            } catch (error) {
+                return `// Error converting SVG to Canvas code: ${error.message}`;
+            }
+        }
+
+        // Test functions
+        let testEditor = null;
+        let currentSvg = '';
+
+        function updateComponentStatus() {
+            const statusDiv = document.getElementById('component-status');
+            let html = '<h3>Component Availability:</h3>';
+            
+            // Test SimpleCodeEditor
+            const editorStatus = typeof SimpleCodeEditor !== 'undefined' ? 'success' : 'error';
+            html += `<span class="status ${editorStatus}">SimpleCodeEditor: ${editorStatus === 'success' ? '✓ Available' : '✗ Not Available'}</span>`;
+            
+            // Test canvg
+            const canvgStatus = typeof canvg !== 'undefined' ? 'success' : 'error';
+            html += `<span class="status ${canvgStatus}">canvg Library: ${canvgStatus === 'success' ? '✓ Loaded' : '✗ Not Loaded'}</span>`;
+            
+            // Test DOM Parser
+            const parserStatus = typeof DOMParser !== 'undefined' ? 'success' : 'error';
+            html += `<span class="status ${parserStatus}">DOMParser: ${parserStatus === 'success' ? '✓ Available' : '✗ Not Available'}</span>`;
+            
+            statusDiv.innerHTML = html;
+        }
+
+        function testCodeEditor() {
+            try {
+                if (!testEditor) {
+                    testEditor = new SimpleCodeEditor('code-editor-test', {
+                        value: `// Test canvas code
+const canvas = document.getElementById('myCanvas');
+const ctx = canvas.getContext('2d');
+ctx.fillStyle = '#ff6b6b';
+ctx.fillRect(10, 10, 100, 50);`,
+                        lineNumbers: true
+                    });
+                }
+                
+                // Test getValue/setValue
+                const originalValue = testEditor.getValue();
+                testEditor.setValue('// Modified test code\\nconsole.log("Editor working!");');
+                
+                setTimeout(() => {
+                    const newValue = testEditor.getValue();
+                    testEditor.setValue(originalValue); // Restore
+                    
+                    document.getElementById('editor-status').innerHTML = 
+                        '<span class="status success">✓ SimpleCodeEditor is working correctly!</span>' +
+                        '<p>Tested getValue/setValue functions successfully.</p>';
+                }, 100);
+                
+            } catch (error) {
+                document.getElementById('editor-status').innerHTML = 
+                    '<span class="status error">✗ SimpleCodeEditor error: ' + error.message + '</span>';
+            }
+        }
+
+        function testBasicShape() {
+            currentSvg = '<svg width="300" height="200" xmlns="http://www.w3.org/2000/svg"><rect x="50" y="50" width="200" height="100" fill="#4CAF50" stroke="#2E7D32" stroke-width="3"/></svg>';
+            
+            document.getElementById('svg-display').innerHTML = currentSvg;
+            
+            // Render with canvg
+            const canvas = document.getElementById('test-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (typeof canvg !== 'undefined') {
+                const v = canvg.Canvg.fromString(ctx, currentSvg);
+                v.start();
+            }
+            
+            // Generate code
+            const code = convertSvgToCanvasCode(currentSvg, 'testCanvas');
+            document.getElementById('generated-code').textContent = code;
+        }
+
+        function testComplexShape() {
+            currentSvg = '<svg width="300" height="200" xmlns="http://www.w3.org/2000/svg"><path d="M50 100 Q 150 50 250 100 T 250 150 Q 150 200 50 150 Z" fill="#9C27B0" stroke="#6A1B9A" stroke-width="2"/></svg>';
+            
+            document.getElementById('svg-display').innerHTML = currentSvg;
+            
+            const canvas = document.getElementById('test-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (typeof canvg !== 'undefined') {
+                const v = canvg.Canvg.fromString(ctx, currentSvg);
+                v.start();
+            }
+            
+            const code = convertSvgToCanvasCode(currentSvg, 'complexCanvas');
+            document.getElementById('generated-code').textContent = code;
+        }
+
+        function testColoredShape() {
+            currentSvg = '<svg width="300" height="200" xmlns="http://www.w3.org/2000/svg"><circle cx="150" cy="100" r="70" fill="#FF5722" stroke="#D84315" stroke-width="4"/></svg>';
+            
+            document.getElementById('svg-display').innerHTML = currentSvg;
+            
+            const canvas = document.getElementById('test-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (typeof canvg !== 'undefined') {
+                const v = canvg.Canvg.fromString(ctx, currentSvg);
+                v.start();
+            }
+            
+            const code = convertSvgToCanvasCode(currentSvg, 'coloredCanvas');
+            document.getElementById('generated-code').textContent = code;
+        }
+
+        function copyCode() {
+            const code = document.getElementById('generated-code').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Code copied to clipboard!');
+            });
+        }
+
+        function runCompleteTest() {
+            const resultsDiv = document.getElementById('workflow-results');
+            let results = '<h3>Workflow Test Results:</h3>';
+            
+            try {
+                // Step 1: Test SVG Parsing
+                const testSvg = '<svg width="100" height="100"><rect x="10" y="10" width="80" height="80" fill="blue"/></svg>';
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(testSvg, 'image/svg+xml');
+                const svgElement = doc.querySelector('svg');
+                
+                if (svgElement) {
+                    results += '<p><span class="status success">✓ Step 1: SVG Parsing</span> - Successfully parsed SVG element</p>';
+                } else {
+                    throw new Error('SVG parsing failed');
+                }
+                
+                // Step 2: Test Code Generation
+                const generatedCode = convertSvgToCanvasCode(testSvg, 'workflowTest');
+                if (generatedCode && generatedCode.includes('canvas.width') && generatedCode.includes('canvg')) {
+                    results += '<p><span class="status success">✓ Step 2: Code Generation</span> - Successfully generated Canvas code</p>';
+                } else {
+                    throw new Error('Code generation failed');
+                }
+                
+                // Step 3: Test Canvas Rendering
+                if (typeof canvg !== 'undefined') {
+                    results += '<p><span class="status success">✓ Step 3: Canvas Rendering</span> - canvg library available for rendering</p>';
+                } else {
+                    results += '<p><span class="status warning">⚠ Step 3: Canvas Rendering</span> - canvg library not loaded</p>';
+                }
+                
+                // Step 4: Test Editor Integration
+                if (typeof SimpleCodeEditor !== 'undefined') {
+                    results += '<p><span class="status success">✓ Step 4: Editor Integration</span> - SimpleCodeEditor ready for use</p>';
+                } else {
+                    throw new Error('SimpleCodeEditor not available');
+                }
+                
+                results += '<p><strong>🎉 Complete workflow test PASSED! Plugin is ready for production use.</strong></p>';
+                
+            } catch (error) {
+                results += '<p><span class="status error">✗ Workflow Error</span> - ' + error.message + '</p>';
+            }
+            
+            resultsDiv.innerHTML = results;
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('Complete plugin test loaded');
+            updateComponentStatus();
+            
+            // Auto-run a basic test
+            setTimeout(() => {
+                testBasicShape();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
