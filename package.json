@@ -1,5 +1,5 @@
 {
-  "name": "Coding-art--convert-illustration-to-canvasJs-code",
+  "name": "coding-art-convert-illustration-to-canvasjs-code",
   "version": "1.0.0",
   "description": "Your Figma Plugin",
   "main": "code.js",
@@ -44,9 +44,6 @@
     }
   },
   "dependencies": {
-    "ace-builds": "^1.41.0",
-    "codemirror": "^5.65.16",
-    "monaco-editor": "^0.52.2",
-    "prismjs": "^1.30.0"
+    "canvg": "^4.0.2"
   }
 }
